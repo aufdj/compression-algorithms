@@ -117,10 +117,10 @@ fn print_usage() {
         \rALGORITHM:
         \r    -lz77,     LZ77 
         \r    -lzw,      LZW
-        \r    -huffman,  Static Huffman coding
+        \r    -flzp,     LZP
         \r    -fpaq,     Adaptive arithmetic encoder
         \r    -lpaq1,    Context mixing arithmetic encoder
-        \r    -flzp,     LZP
+        \r    -huffman,  Static Huffman coding
         \r    -bwt,      Burrows-Wheeler transform
 
         \rMODE:
