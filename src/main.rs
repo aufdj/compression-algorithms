@@ -9,17 +9,20 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::Path;
 use std::time::Instant;
 
 fn main() {
     let time = Instant::now();
-    let args = std::env::args().skip(1).map(PathBuf::from).collect::<Vec<PathBuf>>();
+    let args = std::env::args().skip(1).collect::<Vec<String>>();
+    if args.len() != 4 {
+        print_usage();
+    }
 
-    let algorithm = args[0].to_str().unwrap_or_default();
-    let mode = args[1].to_str().unwrap_or_default();
-    let file_in_str = args[2].to_str().unwrap_or_default();
-    let file_out_str = args[3].to_str().unwrap_or_default();
+    let algorithm = args[0].as_str();
+    let mode = args[1].as_str();
+    let file_in_str = &args[2];
+    let file_out_str = &args[3];
 
     let file_in = BufReader::with_capacity(
         1 << 20, 
@@ -76,18 +79,20 @@ fn main() {
         ("-bwt", "-d") => {
             // When computing BWT transform, the block size is equal to 
             // the input file buffer size.
+            //
             // Because the BWT inverse transform must use the same block 
-            // size, we need to know this size before creating the BufReader, 
-            // but we can't know the size before reading it from the file, 
-            // so we need to create the file, read first 8 bytes containing
-            // block size, and then wrap it in a BufReader.
+            // size, this size must be known before creating the BufReader, 
+            // but it can't be known before reading it from the file.
+            //
+            // To get around this, create the file, read first 8 bytes 
+            // containing block size, and then wrap it in a BufReader.
             let mut file_in = File::open(file_in_str).unwrap();
             let mut a = [0u8; 8];
             file_in.read(&mut a).unwrap();
             let block_size = u64::from_le_bytes(a) as usize;
 
             let file_in = BufReader::with_capacity(
-                block_size + 8, // Add 8 for primary key
+                block_size + 8, // Add 8 for primary index size
                 file_in
             );
             crate::bwt::bwt::bwt_inverse_transform(file_in, file_out); 
@@ -98,8 +103,8 @@ fn main() {
     }
     
     println!("{} bytes -> {} bytes in {:.2?}", 
-        metadata(&args[2]).unwrap().len(), 
-        metadata(&args[3]).unwrap().len(), 
+        metadata(Path::new(file_in_str)).unwrap().len(), 
+        metadata(Path::new(file_out_str)).unwrap().len(), 
         time.elapsed()
     ); 
 }
@@ -123,9 +128,9 @@ fn print_usage() {
         \r    -d         Decompress,
 
         \rEXAMPLES:
-            Compress C:/foo with fpaq and save to C:/bar:
+        \r    Compress C:/foo with fpaq and save to C:/bar:
 
-            program_name -fpaq -c C:/foo C:/bar
+        \r    program_name -fpaq -c C:/foo C:/bar
         "
     );
     std::process::exit(0);

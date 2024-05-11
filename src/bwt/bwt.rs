@@ -23,15 +23,23 @@ pub fn bwt_transform(mut file_in: BufReader<File>, mut file_out: BufWriter<File>
             block_cmp(*a as usize, *b as usize, file_in.buffer())
         });
 
-        let primary_index = indices.iter().position(|&i| i == 1).unwrap();
+        let mut primary_index = 0;
 
-        let bwt = (0..len).zip(indices.iter()).map(|(_, &idx)| {
-            if idx == 0 { 
-                file_in.buffer()[len - 1]
-            } 
-            else {
-                file_in.buffer()[(idx as usize) - 1]
-            }   
+        let bwt = indices.iter().enumerate().map(|(i, &idx)| {
+            match idx {
+                0 => {
+                    file_in.buffer()[len - 1]
+                }
+
+                1 => {
+                    primary_index = i;
+                    file_in.buffer()[idx as usize - 1]
+                }
+
+                _ => {
+                    file_in.buffer()[idx as usize - 1]
+                }
+            }  
         })
         .collect::<Vec<u8>>();
     

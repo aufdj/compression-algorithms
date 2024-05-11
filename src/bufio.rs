@@ -4,9 +4,7 @@ use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::BufRead;
 use std::io::Read;
-use std::io::Result as IoResult;
 use std::io::ErrorKind;
-use std::path::Path;
 
 #[derive(PartialEq, Eq)]
 pub enum BufferState {
@@ -165,12 +163,4 @@ impl BufferedWrite for BufWriter<File> {
     fn flush_buffer(&mut self) {
         self.flush().unwrap();
     }
-}
-
-pub fn new_input_file(capacity: usize, path: &Path) -> IoResult<BufReader<File>> {
-    File::open(path).map(|f| BufReader::with_capacity(capacity, f))
-}
-
-pub fn new_output_file(capacity: usize, path: &Path) -> IoResult<BufWriter<File>> {
-    File::create(path).map(|f| BufWriter::with_capacity(capacity, f))
 }
