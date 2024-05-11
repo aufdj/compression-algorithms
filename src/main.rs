@@ -46,6 +46,12 @@ fn main() {
         ("-lzw", "-d") => { 
             crate::lz::lzw::lzw_decompress(file_in, file_out); 
         }
+        ("-flzp", "-c") => { 
+            crate::lz::flzp::flzp_compress(file_in, file_out); 
+        }
+        ("-flzp", "-d") => { 
+            crate::lz::flzp::flzp_decompress(file_in, file_out); 
+        }
         ("-fpaq", "-c") => { 
             crate::ari::fpaq::fpaq_compress(file_in, file_out); 
         }
