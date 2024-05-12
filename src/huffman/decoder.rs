@@ -13,7 +13,7 @@ use crate::huffman::huffman::NodeType;
 
 pub fn decompress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
     let file_in_size = file_in.get_ref().metadata().unwrap().len();
-    let padding = file_in.read_byte();
+    let padding = file_in.read_u8();
 
     let frequencies: [u32; 256] = array::from_fn(|_| file_in.read_u32());
 
@@ -42,7 +42,7 @@ pub fn decompress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
                 for j in (0..=(7 - padding)).rev() {
                     curr_code.push((*byte >> j) & 1);
                     if let Some(byte) = codes.get(&curr_code) {
-                        file_out.write_byte(*byte);
+                        file_out.write_u8(*byte);
                         curr_code.clear();
                     }
                 }
@@ -51,7 +51,7 @@ pub fn decompress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
                 for j in (0..=7).rev() {
                     curr_code.push((*byte >> j) & 1);
                     if let Some(byte) = codes.get(&curr_code) {
-                        file_out.write_byte(*byte);
+                        file_out.write_u8(*byte);
                         curr_code.clear();
                     }
                 }

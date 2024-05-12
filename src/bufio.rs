@@ -23,11 +23,11 @@ impl BufferState {
 pub trait BufferedRead {
     fn read_<const N: usize>(&mut self) -> [u8; N];
     fn read_checked<const N: usize>(&mut self) -> Option<[u8; N]>;
-    fn read_byte(&mut self) -> u8;
+    fn read_u8(&mut self) -> u8;
     fn read_u16(&mut self) -> u16;
     fn read_u32(&mut self) -> u32;
     fn read_u64(&mut self) -> u64;
-    fn read_byte_checked(&mut self) -> Option<u8>;
+    fn read_u8_checked(&mut self) -> Option<u8>;
     fn read_u16_checked(&mut self) -> Option<u16>;
     fn read_u32_checked(&mut self) -> Option<u32>;
     fn read_u64_checked(&mut self) -> Option<u64>;
@@ -86,7 +86,7 @@ impl BufferedRead for BufReader<File> {
         Some(bytes)
     }
 
-    fn read_byte(&mut self) -> u8 {
+    fn read_u8(&mut self) -> u8 {
         u8::from_le_bytes(self.read_::<1>())
     }
 
@@ -102,7 +102,7 @@ impl BufferedRead for BufReader<File> {
         u64::from_le_bytes(self.read_::<8>())
     }
 
-    fn read_byte_checked(&mut self) -> Option<u8> {
+    fn read_u8_checked(&mut self) -> Option<u8> {
         self.read_checked::<1>().map(u8::from_le_bytes)
     }
 
@@ -149,26 +149,26 @@ fn force_truncate<Src, Dst>(a: Src) -> Dst {
 //
 // let x: u64 = 150;
 //
-// file.write_byte(x);                  Compile time error: u8 does not implement From<u64>
-// file.write_byte_checked(x).unwrap(); No error: x < 255
-// file.write_byte_forced(x);           x is interpreted as u8 and byte 150 is written to file
+// file.write_u8(x);                  Compile time error: u8 does not implement From<u64>
+// file.write_u8_checked(x).unwrap(); No error: x < 255
+// file.write_u8_forced(x);           x is interpreted as u8 and byte 150 is written to file
 //
 // let y: u64 = 500;
 //
-// file.write_byte(y);                  Compile time error: u8 does not implement From<u64>
-// file.write_byte_checked(y).unwrap(); Runtime error: y > 255
-// file.write_byte_forced(y);           y is interpreted as u8 and byte 244(!) is written to file
+// file.write_u8(y);                  Compile time error: u8 does not implement From<u64>
+// file.write_u8_checked(y).unwrap(); Runtime error: y > 255
+// file.write_u8_forced(y);           y is interpreted as u8 and byte 244(!) is written to file
 pub trait BufferedWrite {
     fn write_<const N: usize>(&mut self, output: [u8; N]);
-    fn write_byte<T: Into<u8>>(&mut self, output: T);
+    fn write_u8<T: Into<u8>>(&mut self, output: T);
     fn write_u16<T: Into<u16>>(&mut self, output: T);
     fn write_u32<T: Into<u32>>(&mut self, output: T);
     fn write_u64<T: Into<u64>>(&mut self, output: T);
-    fn write_byte_checked<T: TryInto<u8>>(&mut self, output: T) -> Result<(), <T as TryInto<u8>>::Error>;
+    fn write_u8_checked<T: TryInto<u8>>(&mut self, output: T) -> Result<(), <T as TryInto<u8>>::Error>;
     fn write_u16_checked<T: TryInto<u16>>(&mut self, output: T) -> Result<(), <T as TryInto<u16>>::Error>;
     fn write_u32_checked<T: TryInto<u32>>(&mut self, output: T) -> Result<(), <T as TryInto<u32>>::Error>;
     fn write_u64_checked<T: TryInto<u64>>(&mut self, output: T) -> Result<(), <T as TryInto<u64>>::Error>;
-    fn write_byte_forced<T>(&mut self, output: T);
+    fn write_u8_forced<T>(&mut self, output: T);
     fn write_u16_forced<T>(&mut self, output: T);
     fn write_u32_forced<T>(&mut self, output: T);
     fn flush_buffer(&mut self);
@@ -183,7 +183,7 @@ impl BufferedWrite for BufWriter<File> {
         }
     }
 
-    fn write_byte<T: Into<u8>>(&mut self, output: T) {
+    fn write_u8<T: Into<u8>>(&mut self, output: T) {
         self.write_(output.into().to_le_bytes());
     }
 
@@ -199,7 +199,7 @@ impl BufferedWrite for BufWriter<File> {
         self.write_(output.into().to_le_bytes());
     }
 
-    fn write_byte_checked<T: TryInto<u8>>(&mut self, output: T) -> Result<(), <T as TryInto<u8>>::Error> {
+    fn write_u8_checked<T: TryInto<u8>>(&mut self, output: T) -> Result<(), <T as TryInto<u8>>::Error> {
         self.write_(output.try_into()?.to_le_bytes());
         Ok(())
     }
@@ -219,7 +219,7 @@ impl BufferedWrite for BufWriter<File> {
         Ok(())
     }
 
-    fn write_byte_forced<T>(&mut self, output: T) {
+    fn write_u8_forced<T>(&mut self, output: T) {
         self.write_(force_truncate::<T, u8>(output).to_le_bytes());
     }
 

@@ -16,11 +16,11 @@ pub fn lzw_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>)
     .map(|i| (vec![i as u8], i))
     .collect::<HashMap<Vec<u8>, u16>>();
     
-    let mut string = vec![file_in.read_byte()]; 
+    let mut string = vec![file_in.read_u8()]; 
 
     while !eof {
         while dict.contains_key(&string) {
-            if let Some(byte) = file_in.read_byte_checked() {
+            if let Some(byte) = file_in.read_u8_checked() {
                 string.push(byte); 
             }
             else {

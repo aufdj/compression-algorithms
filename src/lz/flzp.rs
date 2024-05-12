@@ -194,11 +194,11 @@ impl Buffer {
         if self.m_len > 0 {
             if self.m_len == 1 {
                 // Output literal
-                file_out.write_byte(self.buf[(self.p - 1) % BUF_SIZE]);
+                file_out.write_u8(self.buf[(self.p - 1) % BUF_SIZE]);
             } 
             else {
                 // Output match
-                file_out.write_byte(self.enc[self.m_len] as u8);
+                file_out.write_u8(self.enc[self.m_len] as u8);
             }
             self.m_len = 0;
         }
@@ -221,7 +221,7 @@ impl Buffer {
                 self.m_len = 1;
             } 
             else {
-                file_out.write_byte(byte);
+                file_out.write_u8(byte);
             }
         }
         self.update(byte);
@@ -239,7 +239,7 @@ pub fn flzp_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>
         
         // Stop if 32 or less unused bytes remain or if block size is greater than 64K.
         while buf.max_len > 32 && block_size < (1 << 16) {
-            match file_in.read_byte_checked() {
+            match file_in.read_u8_checked() {
                 Some(byte) => {
                     block_size += 1;
                     // If byte has not been encountered  
@@ -277,14 +277,14 @@ pub fn flzp_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>
 
         // Compress
         for _ in 0..block_size {
-            buf.compress(file_in.read_byte(), &mut file_out);
+            buf.compress(file_in.read_u8(), &mut file_out);
         }
 
         // Output remaining matches
         buf.output_match(&mut file_out);
 
         // End of block code
-        file_out.write_byte(buf.enc[0] as u8);
+        file_out.write_u8(buf.enc[0] as u8);
     }
 }
 
@@ -305,7 +305,7 @@ pub fn flzp_decompress(mut file_in: BufReader<File>, mut file_out: BufWriter<Fil
             // and subsequent 0 bits as match lengths
             let mut max_len = -1i32;
             for i in 0..32 {
-                let byte = file_in.read_byte();
+                let byte = file_in.read_u8();
                 // Read bits
                 for j in 0..8 {
                     dec[i*8 + j] = 
@@ -323,7 +323,7 @@ pub fn flzp_decompress(mut file_in: BufReader<File>, mut file_out: BufWriter<Fil
             state = State::Data;
         } 
         else {
-            match file_in.read_byte_checked() {
+            match file_in.read_u8_checked() {
                 Some(mut byte) => {
                     let d = dec[byte as usize];
                     // End of block

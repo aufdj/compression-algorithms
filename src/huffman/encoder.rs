@@ -11,7 +11,7 @@ use crate::huffman::huffman::Node;
 use crate::huffman::huffman::NodeType;
 
 pub fn compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
-    file_out.write_byte(0);
+    file_out.write_u8(0);
 
     // Model data to get frequency distribution
     let frequencies: [u32; 256] = model(&mut file_in);
@@ -48,7 +48,7 @@ pub fn compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
             // Get huffman code corresponding to current byte and write bits to output
             for bit in codes.get(byte).unwrap() {
                 if bits >= 8 {
-                    file_out.write_byte(packed_codes);
+                    file_out.write_u8(packed_codes);
                     packed_codes = 0;
                     bits = 0;
                 }
@@ -59,13 +59,13 @@ pub fn compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
     } 
     // Write remaining code
     if bits > 0 {
-        file_out.write_byte(packed_codes);
+        file_out.write_u8(packed_codes);
     }
     file_out.flush_buffer();
     file_out.rewind().unwrap();
 
     // Write number of padding bits
-    file_out.write_byte(8 - bits);
+    file_out.write_u8(8 - bits);
 }
 
 // Model data to get frequency distribution

@@ -100,8 +100,8 @@ impl Lz77 {
 
             if let Some(m) = best_match {
                 let ptr = ((m.offset & 0x7FF) << 5) + (m.len & 31);
-                self.file_out.write_byte((ptr >> 8) as u8);
-                self.file_out.write_byte((ptr & 0x00FF) as u8); 
+                self.file_out.write_u8((ptr >> 8) as u8);
+                self.file_out.write_u8((ptr & 0x00FF) as u8); 
 
                 let match_bytes = self.buf_pos..self.buf_pos + m.len as usize;
                 self.window.add_bytes(&self.file_in.buffer()[match_bytes]); 
@@ -109,8 +109,8 @@ impl Lz77 {
                 if self.advance(m.len as usize).is_eof() { break; } 
             }
             else {
-                self.file_out.write_byte(0);
-                self.file_out.write_byte(self.file_in.buffer()[self.buf_pos]);
+                self.file_out.write_u8(0);
+                self.file_out.write_u8(self.file_in.buffer()[self.buf_pos]);
                 self.window.add_byte(self.file_in.buffer()[self.buf_pos]);
                 
                 if self.advance(1).is_eof() { break; }
@@ -129,7 +129,7 @@ impl Lz77 {
             ptr += self.file_in.buffer()[self.buf_pos] as u16;
 
             if (ptr >> 8) == 0 {
-                self.file_out.write_byte((ptr & 0x00FF) as u8);
+                self.file_out.write_u8((ptr & 0x00FF) as u8);
                 self.window.add_byte(self.file_in.buffer()[self.buf_pos]);
             } 
             else { 
@@ -137,7 +137,7 @@ impl Lz77 {
 
                 for i in 0..m.len {
                     let byte = self.window.get_byte((m.offset + i) as usize);
-                    self.file_out.write_byte(byte);
+                    self.file_out.write_u8(byte);
                     pending.push(byte);
                 }
                 self.window.add_bytes(&pending);

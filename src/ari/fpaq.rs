@@ -199,7 +199,7 @@ impl Encoder {
         self.predictor.update(bit);
 
         while ((self.high ^ self.low) & 0xFF000000) == 0 {
-            self.file_out.write_byte((self.high >> 24) as u8);
+            self.file_out.write_u8((self.high >> 24) as u8);
             self.high = (self.high << 8) + 255;
             self.low <<= 8;  
         }
@@ -207,11 +207,11 @@ impl Encoder {
 
     fn flush(&mut self) {
         while ((self.high ^ self.low) & 0xFF000000) == 0 {
-            self.file_out.write_byte((self.high >> 24) as u8);
+            self.file_out.write_u8((self.high >> 24) as u8);
             self.high = (self.high << 8) + 255;
             self.low <<= 8; 
         }
-        self.file_out.write_byte((self.high >> 24) as u8);
+        self.file_out.write_u8((self.high >> 24) as u8);
         self.file_out.flush_buffer();
     }
 }
@@ -234,7 +234,7 @@ impl Decoder {
             file_in, 
         };
         for _ in 0..4 {
-            dec.x = (dec.x << 8) + dec.file_in.read_byte() as u32;
+            dec.x = (dec.x << 8) + dec.file_in.read_u8() as u32;
         }
         dec
     }
@@ -257,7 +257,7 @@ impl Decoder {
         while ((self.high ^ self.low) & 0xFF000000) == 0 {
             self.high = (self.high << 8) + 255;
             self.low <<= 8;
-            self.x = (self.x << 8) + self.file_in.read_byte() as u32; 
+            self.x = (self.x << 8) + self.file_in.read_u8() as u32; 
         }
         bit as u8
     }
@@ -266,7 +266,7 @@ impl Decoder {
 pub fn fpaq_compress(mut file_in: BufReader<File>, file_out: BufWriter<File>) {
     let mut enc = Encoder::new(file_out);
 
-    while let Some(byte) = file_in.read_byte_checked() { 
+    while let Some(byte) = file_in.read_u8_checked() { 
         enc.encode(1);
         for i in (0..8).rev() {
             enc.encode(((byte >> i) & 1).into());
@@ -281,7 +281,7 @@ pub fn fpaq_decompress(file_in: BufReader<File>, mut file_out: BufWriter<File>) 
             
     while dec.decode() != 0 { 
         let byte = (0..8).fold(1, |acc, _| (acc << 1) + dec.decode());
-        file_out.write_byte(byte);
+        file_out.write_u8(byte);
     }
     file_out.flush_buffer();
 }

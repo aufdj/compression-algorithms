@@ -972,7 +972,7 @@ impl Encoder {
         self.predictor.update(bit);
         
         while ( (self.high ^ self.low) & 0xFF000000) == 0 {
-            self.archive.write_byte((self.high >> 24) as u8);
+            self.archive.write_u8((self.high >> 24) as u8);
             self.high = (self.high << 8) + 255;
             self.low <<= 8;  
         }
@@ -980,11 +980,11 @@ impl Encoder {
 
     fn flush(&mut self) {
         while ( (self.high ^ self.low) & 0xFF000000) == 0 {
-            self.archive.write_byte((self.high >> 24) as u8);
+            self.archive.write_u8((self.high >> 24) as u8);
             self.high = (self.high << 8) + 255;
             self.low <<= 8;
         }
-        self.archive.write_byte((self.high >> 24) as u8);
+        self.archive.write_u8((self.high >> 24) as u8);
         self.archive.flush_buffer();
     }
 
@@ -1045,7 +1045,7 @@ impl Decoder {
         while ( (self.high ^ self.low) & 0xFF000000) == 0 {
             self.high = (self.high << 8) + 255;
             self.low <<= 8; 
-            self.x = (self.x << 8) + self.archive.read_byte() as u32; 
+            self.x = (self.x << 8) + self.archive.read_u8() as u32; 
         }
         bit
     }
@@ -1074,7 +1074,7 @@ impl Decoder {
 
     fn init_x(&mut self) {
         for _ in 0..4 {
-            self.x = (self.x << 8) + self.archive.read_byte() as u32;
+            self.x = (self.x << 8) + self.archive.read_u8() as u32;
         }
     }
 }

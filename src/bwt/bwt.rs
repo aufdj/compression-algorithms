@@ -80,7 +80,7 @@ pub fn bwt_inverse_transform(mut file_in: BufReader<File>, mut file_out: BufWrit
         }
 
         for _ in 0..file_in.buffer().len() { 
-            file_out.write_byte(file_in.buffer()[index]);
+            file_out.write_u8(file_in.buffer()[index]);
             index = transform[index] as usize;
         }
     }
