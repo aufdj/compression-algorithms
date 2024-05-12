@@ -115,17 +115,17 @@ fn print_usage() {
         \rUsage: [PROGRAM_NAME] [ALGORITHM] [MODE] [INPUT] [OUTPUT]
 
         \rALGORITHM:
-        \r    -lz77,     LZ77 
-        \r    -lzw,      LZW
-        \r    -flzp,     LZP
-        \r    -fpaq,     Adaptive arithmetic encoder
-        \r    -lpaq1,    Context mixing arithmetic encoder
-        \r    -huffman,  Static Huffman coding
-        \r    -bwt,      Burrows-Wheeler transform
+        \r    -lz77     LZ77 
+        \r    -lzw      LZW
+        \r    -flzp     LZP
+        \r    -fpaq     Adaptive arithmetic encoder
+        \r    -lpaq1    Context mixing arithmetic encoder
+        \r    -huffman  Static Huffman coding
+        \r    -bwt      Burrows-Wheeler transform
 
         \rMODE:
-        \r    -c         Compress,
-        \r    -d         Decompress,
+        \r    -c        Compress
+        \r    -d        Decompress
 
         \rEXAMPLES:
         \r    Compress C:/foo with fpaq and save to C:/bar:

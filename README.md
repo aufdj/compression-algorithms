@@ -25,17 +25,17 @@ A collection of Rust compression algorithms.<br>
         Usage: [PROGRAM_NAME] [ALGORITHM] [MODE] [INPUT] [OUTPUT]
 
         ALGORITHM:
-            -lz77,     LZ77 
-            -lzw,      LZW
-            -flzp,     LZP
-            -fpaq,     Adaptive arithmetic encoder
-            -lpaq1,    Context mixing arithmetic encoder
-            -huffman,  Static Huffman coding
-            -bwt,      Burrows-Wheeler transform
+            -lz77     LZ77 
+            -lzw      LZW
+            -flzp     LZP
+            -fpaq     Adaptive arithmetic encoder
+            -lpaq1    Context mixing arithmetic encoder
+            -huffman  Static Huffman coding
+            -bwt      Burrows-Wheeler transform
 
         MODE:
-            -c         Compress,
-            -d         Decompress,
+            -c        Compress
+            -d        Decompress
 
         EXAMPLES:
             Compress C:/foo with fpaq and save to C:/bar:
