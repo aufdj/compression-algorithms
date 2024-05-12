@@ -199,7 +199,7 @@ impl Encoder {
         self.predictor.update(bit);
 
         while ((self.high ^ self.low) & 0xFF000000) == 0 {
-            self.file_out.write_u8((self.high >> 24) as u8);
+            self.file_out.write_u8_forced(self.high >> 24);
             self.high = (self.high << 8) + 255;
             self.low <<= 8;  
         }
@@ -207,11 +207,11 @@ impl Encoder {
 
     fn flush(&mut self) {
         while ((self.high ^ self.low) & 0xFF000000) == 0 {
-            self.file_out.write_u8((self.high >> 24) as u8);
+            self.file_out.write_u8_forced(self.high >> 24);
             self.high = (self.high << 8) + 255;
             self.low <<= 8; 
         }
-        self.file_out.write_u8((self.high >> 24) as u8);
+        self.file_out.write_u8_forced(self.high >> 24);
         self.file_out.flush_buffer();
     }
 }
