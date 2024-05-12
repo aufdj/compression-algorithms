@@ -100,20 +100,24 @@ impl Lz77 {
 
             if let Some(m) = best_match {
                 let ptr = ((m.offset & 0x7FF) << 5) + (m.len & 31);
-                self.file_out.write_u8((ptr >> 8) as u8);
-                self.file_out.write_u8((ptr & 0x00FF) as u8); 
+                self.file_out.write_u8_forced(ptr >> 8);
+                self.file_out.write_u8_forced(ptr & 0x00FF);
 
                 let match_bytes = self.buf_pos..self.buf_pos + m.len as usize;
                 self.window.add_bytes(&self.file_in.buffer()[match_bytes]); 
 
-                if self.advance(m.len as usize).is_eof() { break; } 
+                if self.advance(m.len as usize).is_eof() { 
+                    break; 
+                } 
             }
             else {
                 self.file_out.write_u8(0);
                 self.file_out.write_u8(self.file_in.buffer()[self.buf_pos]);
                 self.window.add_byte(self.file_in.buffer()[self.buf_pos]);
                 
-                if self.advance(1).is_eof() { break; }
+                if self.advance(1).is_eof() { 
+                    break; 
+                }
             }
             matches.clear();
         } 
@@ -125,11 +129,13 @@ impl Lz77 {
         let mut pending = Vec::new();
         loop {
             let mut ptr = (self.file_in.buffer()[self.buf_pos] as u16) * 256;
-            if self.advance(1).is_eof() { break; }
+            if self.advance(1).is_eof() { 
+                break; 
+            }
             ptr += self.file_in.buffer()[self.buf_pos] as u16;
 
             if (ptr >> 8) == 0 {
-                self.file_out.write_u8((ptr & 0x00FF) as u8);
+                self.file_out.write_u8_forced(ptr & 0x00FF);
                 self.window.add_byte(self.file_in.buffer()[self.buf_pos]);
             } 
             else { 
@@ -143,7 +149,9 @@ impl Lz77 {
                 self.window.add_bytes(&pending);
                 pending.clear();
             }
-            if self.advance(1).is_eof() { break; }
+            if self.advance(1).is_eof() { 
+                break; 
+            }
         }
         self.file_out.flush_buffer();
     }
