@@ -951,9 +951,9 @@ impl Encoder {
             predictor: Predictor::new(), 
             archive
         };   
-        enc.archive.write_u64(0);
-        enc.archive.write_u64(0);
-        enc.archive.write_u64(0);
+        enc.archive.write_u64(0u64);
+        enc.archive.write_u64(0u64);
+        enc.archive.write_u64(0u64);
         enc
     }
 

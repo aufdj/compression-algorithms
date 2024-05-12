@@ -5,6 +5,8 @@ use std::io::BufWriter;
 use std::io::BufRead;
 use std::io::Read;
 use std::io::ErrorKind;
+use std::convert::TryInto;
+use std::mem;
 
 #[derive(PartialEq, Eq)]
 pub enum BufferState {
@@ -126,12 +128,49 @@ impl BufferedRead for BufReader<File> {
     }
 }
 
+fn force_truncate<Src, Dst>(a: Src) -> Dst {
+    assert!(mem::size_of::<Src>() > mem::size_of::<Dst>());
+    unsafe {
+        mem::transmute_copy::<Src, Dst>(&a)
+    }
+}
+
+// Convenience functions for buffered writing
+//
+// write_* functions are ideal, but only work with specific types.
+//
+// write_*_checked functions are for fallible conversions.
+//
+// write_*_forced is mostly equivalent to 'as', and should only be used 
+// in situations where write_* doesn't work but the input is guaranteed to
+// fit in the smaller type.
+//
+// Examples:
+//
+// let x: u64 = 150;
+//
+// file.write_byte(x);                  Compile time error: u8 does not implement From<u64>
+// file.write_byte_checked(x).unwrap(); No error: x < 255
+// file.write_byte_forced(x);           x is interpreted as u8 and byte 150 is written to file
+//
+// let y: u64 = 500;
+//
+// file.write_byte(y);                  Compile time error: u8 does not implement From<u64>
+// file.write_byte_checked(y).unwrap(); Runtime error: y > 255
+// file.write_byte_forced(y);           y is interpreted as u8 and byte 244(!) is written to file
 pub trait BufferedWrite {
     fn write_<const N: usize>(&mut self, output: [u8; N]);
-    fn write_byte(&mut self, output: u8);
-    fn write_u16(&mut self, output: u16);
-    fn write_u32(&mut self, output: u32);
-    fn write_u64(&mut self, output: u64);
+    fn write_byte<T: Into<u8>>(&mut self, output: T);
+    fn write_u16<T: Into<u16>>(&mut self, output: T);
+    fn write_u32<T: Into<u32>>(&mut self, output: T);
+    fn write_u64<T: Into<u64>>(&mut self, output: T);
+    fn write_byte_checked<T: TryInto<u8>>(&mut self, output: T) -> Result<(), <T as TryInto<u8>>::Error>;
+    fn write_u16_checked<T: TryInto<u16>>(&mut self, output: T) -> Result<(), <T as TryInto<u16>>::Error>;
+    fn write_u32_checked<T: TryInto<u32>>(&mut self, output: T) -> Result<(), <T as TryInto<u32>>::Error>;
+    fn write_u64_checked<T: TryInto<u64>>(&mut self, output: T) -> Result<(), <T as TryInto<u64>>::Error>;
+    fn write_byte_forced<T>(&mut self, output: T);
+    fn write_u16_forced<T>(&mut self, output: T);
+    fn write_u32_forced<T>(&mut self, output: T);
     fn flush_buffer(&mut self);
 }
 
@@ -144,20 +183,52 @@ impl BufferedWrite for BufWriter<File> {
         }
     }
 
-    fn write_byte(&mut self, output: u8) {
-        self.write_(output.to_le_bytes());
+    fn write_byte<T: Into<u8>>(&mut self, output: T) {
+        self.write_(output.into().to_le_bytes());
     }
 
-    fn write_u16(&mut self, output: u16) {
-        self.write_(output.to_le_bytes());
+    fn write_u16<T: Into<u16>>(&mut self, output: T) {
+        self.write_(output.into().to_le_bytes());
     }
 
-    fn write_u32(&mut self, output: u32) {
-        self.write_(output.to_le_bytes());
+    fn write_u32<T: Into<u32>>(&mut self, output: T) {
+        self.write_(output.into().to_le_bytes());
     }
 
-    fn write_u64(&mut self, output: u64) {
-        self.write_(output.to_le_bytes());
+    fn write_u64<T: Into<u64>>(&mut self, output: T) {
+        self.write_(output.into().to_le_bytes());
+    }
+
+    fn write_byte_checked<T: TryInto<u8>>(&mut self, output: T) -> Result<(), <T as TryInto<u8>>::Error> {
+        self.write_(output.try_into()?.to_le_bytes());
+        Ok(())
+    }
+
+    fn write_u16_checked<T: TryInto<u16>>(&mut self, output: T) -> Result<(), <T as TryInto<u16>>::Error> {
+        self.write_(output.try_into()?.to_le_bytes());
+        Ok(())
+    }
+
+    fn write_u32_checked<T: TryInto<u32>>(&mut self, output: T) -> Result<(), <T as TryInto<u32>>::Error> {
+        self.write_(output.try_into()?.to_le_bytes());
+        Ok(())
+    }
+
+    fn write_u64_checked<T: TryInto<u64>>(&mut self, output: T) -> Result<(), <T as TryInto<u64>>::Error> {
+        self.write_(output.try_into()?.to_le_bytes());
+        Ok(())
+    }
+
+    fn write_byte_forced<T>(&mut self, output: T) {
+        self.write_(force_truncate::<T, u8>(output).to_le_bytes());
+    }
+
+    fn write_u16_forced<T>(&mut self, output: T) {
+        self.write_(force_truncate::<T, u16>(output).to_le_bytes());
+    }
+
+    fn write_u32_forced<T>(&mut self, output: T) {
+        self.write_(force_truncate::<T, u32>(output).to_le_bytes());
     }
 
     fn flush_buffer(&mut self) {
