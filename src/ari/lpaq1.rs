@@ -92,7 +92,6 @@ struct StateMap {
 }
 
 impl StateMap {
-    /// Create a new StateMap.
     fn new(n: usize) -> Self {
         Self {
             cxt:     0,
@@ -101,7 +100,6 @@ impl StateMap {
         }
     }
 
-    /// Maps a context, usually a state, to a prediction.
     fn p(&mut self, bit: i32, cxt: i32) -> i32 {
         assert!(bit == 0 || bit == 1);
         self.update(bit);
@@ -293,7 +291,7 @@ impl MatchModel {
         self.cxt = (self.cxt << 1) + bit as usize;
         self.bits += 1;                      
 
-        if self.bits == 8 { // Byte boundary
+        if self.bits == 8 {
             self.update_long_hash(); 
             self.update_short_hash(); 
 
@@ -984,7 +982,7 @@ impl Encoder {
         while ( (self.high ^ self.low) & 0xFF000000) == 0 {
             self.archive.write_byte((self.high >> 24) as u8);
             self.high = (self.high << 8) + 255;
-            self.low <<= 8; 
+            self.low <<= 8;
         }
         self.archive.write_byte((self.high >> 24) as u8);
         self.archive.flush_buffer();
@@ -1001,9 +999,9 @@ impl Encoder {
     // Write 24 byte block data header
     fn write_block_data(&mut self, data: BlockData) {
         self.archive.get_ref().rewind().unwrap();
-        self.archive.write_u64(data.final_size as u64);
-        self.archive.write_u64(data.base_size as u64);
-        self.archive.write_u64(data.count as u64);    
+        self.archive.write_u64(data.final_size);
+        self.archive.write_u64(data.base_size);
+        self.archive.write_u64(data.count);    
     }
 }
 
@@ -1052,10 +1050,10 @@ impl Decoder {
         bit
     }
 
-    fn decode_block(&mut self, block_size: usize) -> Vec<u8> {
-        let mut block: Vec<u8> = Vec::with_capacity(block_size); 
+    fn decode_block(&mut self, block_size: u64) -> Vec<u8> {
+        let mut block = Vec::with_capacity(block_size as usize); 
         while block.len() < block.capacity() {
-            let mut byte: i32 = 1;
+            let mut byte = 1;
             while byte < 256 {
                 byte += byte + self.decode_bit();
             }
@@ -1068,9 +1066,9 @@ impl Decoder {
     // Read 24 byte block data header
     fn read_block_data(&mut self) -> BlockData {
         BlockData::from(
-            self.archive.read_u64() as usize, 
-            self.archive.read_u64() as usize,
-            self.archive.read_u64() as usize
+            self.archive.read_u64(), 
+            self.archive.read_u64(),
+            self.archive.read_u64()
         )
     }
 
@@ -1083,12 +1081,12 @@ impl Decoder {
 
 
 struct BlockData {
-    base_size:  usize,
-    final_size: usize,
-    count:      usize,
+    base_size:  u64,
+    final_size: u64,
+    count:      u64,
 }
 impl BlockData {
-    fn new(base_size: usize) -> Self {
+    fn new(base_size: u64) -> Self {
         Self {
             base_size,
             final_size: 0,
@@ -1096,7 +1094,7 @@ impl BlockData {
         }
     }
 
-    fn from(final_size: usize, base_size: usize, count: usize) -> Self {
+    fn from(final_size: u64, base_size: u64, count: u64) -> Self {
         Self {
             base_size,
             final_size,
@@ -1104,18 +1102,18 @@ impl BlockData {
         }
     }
 
-    fn update(&mut self, size: usize) {
+    fn update(&mut self, size: u64) {
         self.final_size = size;
         self.count += 1;
     }
 }
 
 pub fn lpaq1_compress(mut file_in: BufReader<File>, file_out: BufWriter<File>) {
-    let mut data = BlockData::new(file_in.capacity());
+    let mut data = BlockData::new(file_in.capacity() as u64);
     let mut enc = Encoder::new(file_out);
 
     while !file_in.fill_buffer().is_eof() {
-        data.update(file_in.buffer().len());
+        data.update(file_in.buffer().len() as u64);
         enc.encode_block(&file_in.buffer());
     } 
     enc.flush();
