@@ -9,7 +9,6 @@ use crate::bufio::*;
 const MAX_CODE: u16 = 65535;
 
 pub fn lzw_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
-    let mut eof = false;
     let mut dict_code = 256;
 
     let mut dict = (0..256)
@@ -18,14 +17,17 @@ pub fn lzw_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>)
     
     let mut string = vec![file_in.read_u8()]; 
 
-    while !eof {
+    loop {
         while dict.contains_key(&string) {
             if let Some(byte) = file_in.read_u8_checked() {
                 string.push(byte); 
             }
             else {
-                eof = true;
-                break;
+                // EOF reached.
+                // Current string is guaranteed to be in dictionary.
+                file_out.write_u16(*dict.get(&string).unwrap());
+                file_out.flush().unwrap();
+                return;
             }  
         }
         dict.insert(string.clone(), dict_code); 
@@ -42,10 +44,6 @@ pub fn lzw_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>)
             dict.retain(|_, i| *i < 256);
         }
     }
-    if !string.is_empty() {
-        file_out.write_u16(*dict.get(&string).unwrap());
-    }
-    file_out.flush().unwrap();
 }
 
 pub fn lzw_decompress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>) {
