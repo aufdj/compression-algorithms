@@ -143,7 +143,7 @@ const HT_SIZE: usize = BUF_SIZE / 4;
 struct Buffer {
     buf:     Vec<u8>,    // Rotating buffer of BUF_SIZE bytes
     ht:      Vec<u32>,   // Hash table: hash -> matched context
-    enc:     [i32; 256], // Encoding table: -1 = LITERAL, 0 = EOB, 1..max_len = m_pos
+    enc:     [u8; 256],  // Encoding table: -1 = LITERAL, 0 = EOB, 1..max_len = m_pos
     hash:    usize,      // Context hash
     m_pos:   usize,      // Position of match
     m_len:   usize,      // Length of match
@@ -198,7 +198,7 @@ impl Buffer {
             } 
             else {
                 // Output match
-                file_out.write_u8(self.enc[self.m_len] as u8);
+                file_out.write_u8(self.enc[self.m_len]);
             }
             self.m_len = 0;
         }
@@ -262,7 +262,7 @@ pub fn flzp_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>
         // Iterate through all bytes and find unused ones.
         for i in 0usize..256 {
             if (dec[i >> 3] & (1 << (i & 7))) == 0 {
-                buf.enc[j] = i as i32;
+                buf.enc[j] = i as u8;
                 j += 1;
             }
         }
@@ -284,7 +284,7 @@ pub fn flzp_compress(mut file_in: BufReader<File>, mut file_out: BufWriter<File>
         buf.output_match(&mut file_out);
 
         // End of block code
-        file_out.write_u8(buf.enc[0] as u8);
+        file_out.write_u8(buf.enc[0]);
     }
 }
 
