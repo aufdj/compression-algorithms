@@ -1,4 +1,3 @@
-use std::iter::repeat;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::fs::File;
@@ -58,15 +57,10 @@ struct Apm {
 
 impl Apm {
     fn new(n: usize) -> Self {
-        let bins = repeat(
-            (0..33)
-            .map(|i| (squash((i - 16) * 128) * 16) as u16)
-            .collect::<Vec<u16>>()
-            .into_iter() 
+        let bins = (0..n).flat_map(|_|
+            (0..33).map(|i| (squash((i - 16) * 128) * 16) as u16)
         )
-        .take(n)
-        .flatten()
-        .collect();
+        .collect::<Vec<u16>>();
 
         Self {
             bin:  0,
